@@ -134,7 +134,7 @@ class MainActivity : AppCompatActivity() {
         val listItems = ArrayList<User>()
         val searchUrl = "https://api.github.com/search/users?q=$username"
         val client = AsyncHttpClient()
-        client.addHeader("Authorization", "token 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")
+        client.addHeader("Authorization", "token YOURKEY")
         client.addHeader("User-Agent", "request")
         client.get(searchUrl, object : AsyncHttpResponseHandler(){
             override fun onSuccess(
