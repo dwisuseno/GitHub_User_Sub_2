@@ -10,12 +10,20 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.CompoundButton
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SearchView
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.dwisuseno.githubusernavigationdanapi.databinding.ActivityMainBinding
+import com.dwisuseno.mydatastore.SettingPreferences
+import com.google.android.material.switchmaterial.SwitchMaterial
 import com.loopj.android.http.AsyncHttpClient
 import com.loopj.android.http.AsyncHttpResponseHandler
 import cz.msebera.android.httpclient.Header
@@ -24,6 +32,8 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
+
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
@@ -31,20 +41,45 @@ class MainActivity : AppCompatActivity() {
     private val list = ArrayList<User>()
     private lateinit var errorMsg: String
 
+
     companion object {
         private const val TAG = "MainActivity"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        supportActionBar?.show()
+
+        val switchTheme = findViewById<SwitchMaterial>(R.id.switch_theme)
+
+        val pref = SettingPreferences.getInstance(dataStore)
+        val mainViewModel = ViewModelProvider(this, ViewModelFactory(pref)).get(
+            MainViewModel::class.java
+        )
+
+        mainViewModel.getThemeSettings().observe(this,
+            { isDarkModeActive: Boolean ->
+                if (isDarkModeActive) {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                    switchTheme.isChecked = true
+                } else {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                    switchTheme.isChecked = false
+                }
+            })
+
+        switchTheme.setOnCheckedChangeListener { _: CompoundButton?, isChecked: Boolean ->
+            mainViewModel.saveThemeSetting(isChecked)
+        }
 
         rvUsers = findViewById(R.id.rv_user)
         rvUsers.setHasFixedSize(true)
 
-        supportActionBar?.show()
-
+        showRecyclerList()
 
     }
 
@@ -52,16 +87,24 @@ class MainActivity : AppCompatActivity() {
         val inflater = menuInflater
         inflater.inflate(R.menu.option_menu, menu)
 
+        list.clear()
+
         val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
         val searchView = menu.findItem(R.id.search).actionView as SearchView
         searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
         searchView.queryHint = resources.getString(R.string.search_hint)
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String): Boolean {
-                getListUser(query)
-                showLoading(true)
-                showRecyclerList()
                 list.clear()
+                rvUsers.setVisibility(View.GONE)
+                if (query.isNotEmpty()) {
+
+                    showLoading(true)
+                    rvUsers.setVisibility(View.VISIBLE)
+                    getListUser(query)
+
+                }
+
                 return true
             }
             override fun onQueryTextChange(newText: String): Boolean {
@@ -75,8 +118,12 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.keluar -> {
-//                val i = Intent(this, MenuActivity::class.java)
                 finish()
+                return true
+            }
+            R.id.favorite -> {
+                val moveFavoriteUser = Intent(this@MainActivity, FavoriteUser::class.java)
+                startActivity(moveFavoriteUser)
                 return true
             }
             else -> return true
@@ -117,6 +164,7 @@ class MainActivity : AppCompatActivity() {
                     } else {
                         Toast.makeText(this@MainActivity, "Data Kosong", Toast.LENGTH_SHORT).show()
                     }
+                    showRecyclerList()
 
                 } catch (e: Exception) {
                     Log.d(TAG, e.message.toString())
@@ -149,6 +197,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             rvUsers.layoutManager = LinearLayoutManager(this)
         }
+
         val listUserAdapter = ListUserAdapter(list)
         rvUsers.adapter = listUserAdapter
 

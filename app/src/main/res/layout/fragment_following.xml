@@ -9,22 +9,10 @@
 
     <!-- TODO: Update blank fragment layout -->
 
-    <ProgressBar
-        android:id="@+id/progressBar3"
-        style="?android:attr/progressBarStyle"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="500dp"
-        android:visibility="gone"
-        tools:visibility="visible" />
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_following"
         android:layout_width="402dp"
-        android:layout_height="330dp"
+        android:layout_height="320dp"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:overScrollMode="never"
@@ -33,5 +21,20 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <ProgressBar
+        android:id="@+id/progressBar3"
+        style="?android:attr/progressBarStyle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:outlineSpotShadowColor="@color/teal_700"
+        android:indeterminateTint="@color/teal_700"
+        android:layout_marginTop="50dp"
+        android:visibility="gone"
+        app:layout_anchorGravity="center"
+        tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
